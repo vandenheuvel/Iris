@@ -1,7 +1,7 @@
 
-from __future__ import unicode_literals
 
-import random, string, logging, json, pykka, urllib, urllib2, os, sys, mopidy_iris, subprocess
+
+import random, string, logging, json, pykka, urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse, os, sys, mopidy_iris, subprocess
 import tornado.web
 import tornado.ioloop
 import tornado.httpclient
@@ -112,7 +112,7 @@ class IrisCore(pykka.ThreadingActor):
 
         # if we're a string, split into list
         # this handles the different ways we get this passed (select_subprotocols gives string, headers.get gives list)
-        if isinstance(protocol, basestring):
+        if isinstance(protocol, str):
 
             # make sure we strip any spaces (IE gives "element,element", proper browsers give "element, element")
             protocol = [i.strip() for i in protocol.split(',')]
@@ -224,7 +224,7 @@ class IrisCore(pykka.ThreadingActor):
                 'params': data['params'] if 'params' in data else None
             }
 
-        for connection in self.connections.itervalues():
+        for connection in self.connections.values():
 
             send_to_this_connection = True
 
@@ -257,7 +257,7 @@ class IrisCore(pykka.ThreadingActor):
         callback = kwargs.get('callback', None)
 
         connections = []
-        for connection in self.connections.itervalues():
+        for connection in self.connections.values():
             connections.append(connection['client'])
 
         response = {
@@ -407,10 +407,10 @@ class IrisCore(pykka.ThreadingActor):
     def get_version(self, *args, **kwargs):
         callback = kwargs.get('callback', False)
         url = 'https://pypi.python.org/pypi/Mopidy-Iris/json'
-        req = urllib2.Request(url)
+        req = urllib.request.Request(url)
 
         try:
-            response = urllib2.urlopen(req, timeout=30).read()
+            response = urllib.request.urlopen(req, timeout=30).read()
             response = json.loads(response)
             latest_version = response['info']['version']
 
@@ -418,7 +418,7 @@ class IrisCore(pykka.ThreadingActor):
             upgrade_available = cmp( parse_version( latest_version ), parse_version( self.version ) )
             upgrade_available = ( upgrade_available == 1 )
 
-        except (urllib2.HTTPError, urllib2.URLError) as e:
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
             latest_version = '0.0.0'
             upgrade_available = False
 
@@ -694,10 +694,10 @@ class IrisCore(pykka.ThreadingActor):
             url = url+'&seed_tracks='+(",".join(self.radio['seed_tracks'])).replace('spotify:track:','')
             url = url+'&limit=50'
 
-            req = urllib2.Request(url)
+            req = urllib.request.Request(url)
             req.add_header('Authorization', 'Bearer '+access_token)
 
-            response = urllib2.urlopen(req, timeout=30).read()
+            response = urllib.request.urlopen(req, timeout=30).read()
             response_dict = json.loads(response)
 
             uris = []
@@ -889,7 +889,7 @@ class IrisCore(pykka.ThreadingActor):
         headers = None
         if 'additional_headers' in command:
             d = command['additional_headers'].split('\n')
-            lines = list(filter(lambda x: x.find(':') > 0, d))
+            lines = list([x for x in d if x.find(':') > 0])
             fields = [(x.split(':', 1)[0].strip().lower(), x.split(':', 1)[1].strip()) for x in lines]
             headers = dict(fields)
 
@@ -976,7 +976,7 @@ class IrisCore(pykka.ThreadingActor):
 
         try:
             http_client = tornado.httpclient.HTTPClient()
-            request = tornado.httpclient.HTTPRequest(url, method='POST', body=urllib.urlencode(data))
+            request = tornado.httpclient.HTTPRequest(url, method='POST', body=urllib.parse.urlencode(data))
             response = http_client.fetch(request)
 
             token = json.loads(response.body)
@@ -998,7 +998,7 @@ class IrisCore(pykka.ThreadingActor):
             else:
                 return response
 
-        except (urllib2.HTTPError, urllib2.URLError) as e:
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
             error = json.loads(e.read())
             error = {'message': 'Could not refresh token: '+error['error_description']}
 
@@ -1035,7 +1035,7 @@ class IrisCore(pykka.ThreadingActor):
         try:
             path = request.get_argument('path')
             url = 'https://genius.com'+path
-        except Exception, e:
+        except Exception as e:
             logger.error(e)
             error = {
                 'message': "Path not valid",
@@ -1051,7 +1051,7 @@ class IrisCore(pykka.ThreadingActor):
                     'description': 'Connection '+connection_id+' not connected'
                 }
 
-        except Exception, e:
+        except Exception as e:
             logger.error(e)
             error = {
                 'message': "Unauthorized request",

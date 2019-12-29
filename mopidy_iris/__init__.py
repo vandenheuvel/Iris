@@ -1,15 +1,15 @@
 
-from __future__ import unicode_literals
+
 
 import logging, os, json
 import tornado.web
 import tornado.websocket
-import handlers
+from . import handlers
 
 from mopidy import config, ext
-from frontend import IrisFrontend
-from handlers import WebsocketHandler, HttpHandler
-from core import IrisCore
+from .frontend import IrisFrontend
+from .handlers import WebsocketHandler, HttpHandler
+from .core import IrisCore
 
 logger = logging.getLogger(__name__)
 __version__ = '3.43.0'

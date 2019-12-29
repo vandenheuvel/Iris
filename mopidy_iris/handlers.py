@@ -1,9 +1,9 @@
 
-from __future__ import unicode_literals
+
 from datetime import datetime
 from tornado.escape import json_encode, json_decode
 import tornado.ioloop, tornado.web, tornado.websocket, tornado.template
-import random, string, logging, uuid, subprocess, pykka, ast, logging, json, urllib, urllib2, mem, requests, time
+import random, string, logging, uuid, subprocess, pykka, ast, logging, json, urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse, mem, requests, time
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
             if hasattr(mem.iris, message['method']):
                 try:
                     getattr(mem.iris, message['method'])(data=params, callback=lambda response, error=False: self.handle_result(id=id, method=message['method'], response=response, error=error))
-                except Exception, e:
+                except Exception as e:
                     logger.error(str(e))
 
             else:
@@ -144,7 +144,7 @@ class HttpHandler(tornado.web.RequestHandler):
         if hasattr(mem.iris, slug):
             try:
                 getattr(mem.iris, slug)(request=self, callback=lambda response, error=False: self.handle_result(id=id, method=slug, response=response, error=error))
-            except Exception, e:
+            except Exception as e:
                 logger.error(str(e))
                 
         else:
@@ -167,7 +167,7 @@ class HttpHandler(tornado.web.RequestHandler):
             try:
                 getattr(mem.iris, slug)(data=params, request=self.request, callback=lambda response=False, error=False: self.handle_result(id=id, method=slug, response=response, error=error))
 
-            except urllib2.HTTPError as e:
+            except urllib.error.HTTPError as e:
                 self.handle_result(id=id, error={'code': 32601, 'message': "Invalid JSON payload"})
                 return
 
